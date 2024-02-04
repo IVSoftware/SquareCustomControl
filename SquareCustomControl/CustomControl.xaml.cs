@@ -49,17 +49,26 @@ public partial class CustomControl : Grid
             HeightRequest = squareDimension;
             WidthRequest = squareDimension;
 
-            ClearDraw();
-            var decr = (int)(WidthRequest / 40f);
-            for (int radius = (int)WidthRequest / 2; radius > 0; radius -= decr)
+            Dispatcher.Dispatch(() =>
             {
-                DrawCircle(
-                    (float)(HeightRequest / 2),
-                    (float)(HeightRequest / 2),
-                    radius,
-                    Colors.Blue);
-            }
-            _graphics.Invalidate();
+                ClearDraw();
+                var decr = (int)(WidthRequest / 40f);
+                for (int radius = (int)WidthRequest / 2; radius > 0; radius -= decr)
+                {
+                    DrawCircle(
+                        (float)(HeightRequest / 2),
+                        (float)(HeightRequest / 2),
+                        radius,
+                        Colors.Blue);
+                    //var drawAction = ((ICanvas canvas, RectF dirtyRect) =>
+                    //{
+                    //    canvas.StrokeColor = Colors.Blue;
+                    //    canvas.DrawCircle((float)(HeightRequest / 2), (float)(HeightRequest / 2), radius);
+                    //});
+                    //InternalDrawDocument.Add(drawAction);
+                }
+                _graphics.Invalidate();
+            });
         }
     }
 
