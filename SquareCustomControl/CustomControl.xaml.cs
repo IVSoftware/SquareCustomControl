@@ -49,21 +49,15 @@ public partial class CustomControl : Grid
             HeightRequest = squareDimension;
             WidthRequest = squareDimension;
 
-            InternalDrawDocument.Clear();
-            UserDrawDocument.Clear();
-            _graphics.Invalidate();
-
+            ClearDraw();
             var decr = (int)(WidthRequest / 40f);
             for (int radius = (int)WidthRequest / 2; radius > 0; radius -= decr)
             {
-                InternalDrawDocument.Add((canvas, dirtyRect) =>
-                {
-                    canvas.StrokeColor = Colors.Blue;
-                    canvas.DrawCircle(
+                DrawCircle(
                     (float)(HeightRequest / 2),
                     (float)(HeightRequest / 2),
-                    radius);
-                });
+                    radius,
+                    Colors.Blue);
             }
             _graphics.Invalidate();
         }
@@ -79,6 +73,10 @@ public partial class CustomControl : Grid
         InternalDrawDocument.Add(drawAction);
     }
     public void Refresh() =>_graphics.Invalidate();
+    public void ClearDraw()
+    {
+        InternalDrawDocument.Clear();
+    }
 
     private class InnerDrawable : IDrawable
     {
