@@ -12,14 +12,7 @@
             VerticalOptions="Center">
             <local:CustomControl
                 x:Name="drawableControl"
-                BackgroundColor="Fuchsia">
-                <Image
-                    Source="dotnet_bot.png"
-                    Aspect="AspectFit"
-                    Margin="2"
-                    SemanticProperties.Description="dot net bot in a race car number eight" 
-                    BackgroundColor="White"/>
-
+                BackgroundColor="WhiteSmoke">
                     <Button
                     x:Name="buttonDraw"
                     Text="Draw Circle"
