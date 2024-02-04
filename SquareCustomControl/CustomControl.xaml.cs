@@ -51,7 +51,11 @@ public partial class CustomControl : Grid
 
             Dispatcher.Dispatch(() =>
             {
-                ClearDraw();
+                InternalDrawDocument.Clear();
+                _graphics.Invalidate();
+            });
+            Dispatcher.Dispatch(() =>
+            {
                 var decr = (int)(WidthRequest / 40f);
                 for (int radius = (int)WidthRequest / 2; radius > 0; radius -= decr)
                 {
@@ -80,10 +84,6 @@ public partial class CustomControl : Grid
         InternalDrawDocument.Add(drawAction);
     }
     public void Refresh() =>_graphics.Invalidate();
-    public void ClearDraw()
-    {
-        InternalDrawDocument.Clear();
-    }
 
     private class InnerDrawable : IDrawable
     {
