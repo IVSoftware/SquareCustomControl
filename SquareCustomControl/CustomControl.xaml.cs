@@ -40,7 +40,7 @@ public partial class CustomControl : Grid
         };
     }
 
-    private void OnPageSizeChanged(object? sender, EventArgs e)
+    protected virtual void OnPageSizeChanged(object? sender, EventArgs e)
     {
         if (sender is ContentPage page)
         {
@@ -52,6 +52,7 @@ public partial class CustomControl : Grid
             Dispatcher.Dispatch(() =>
             {
                 InternalDrawDocument.Clear();
+                UserDrawDocument.Clear();      // Maybe you 
                 _graphics.Invalidate();
             });
             Dispatcher.Dispatch(() =>
@@ -72,16 +73,6 @@ public partial class CustomControl : Grid
                 _graphics.Invalidate();
             });
         }
-    }
-
-    private void DrawCircle(float centerX, float centerY, float radius, Color color)
-    {
-        var drawAction = ((ICanvas canvas, RectF dirtyRect) =>
-        {
-            canvas.StrokeColor = color;
-            canvas.DrawCircle(centerX, centerY, radius);
-        });
-        InternalDrawDocument.Add(drawAction);
     }
     public void Refresh() =>_graphics.Invalidate();
 

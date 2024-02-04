@@ -1,8 +1,4 @@
-﻿using Microsoft.UI.Xaml.Controls;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-
-namespace SquareCustomControl
+﻿namespace SquareCustomControl
 {
     public partial class MainPage : ContentPage
     {
