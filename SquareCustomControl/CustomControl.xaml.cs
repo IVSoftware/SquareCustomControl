@@ -58,19 +58,6 @@ public partial class CustomControl : Grid
         private readonly CustomControl _parent;
         public void Draw(ICanvas canvas, RectF dirtyRect)
         {
-            _parent.Draw?.Invoke(this, new DrawEventArgs(canvas, dirtyRect));
-            Debug.WriteLine($"Invalidated size is {dirtyRect.Size}");
-        }
-    }
-    public event EventHandler<DrawEventArgs>? Draw;
-    protected virtual void OnDraw(DrawEventArgs e)
-    {
-        Draw?.Invoke(this, e);
-    }
-    public class DrawEventArgs : EventArgs
-    {
-        public DrawEventArgs(ICanvas canvas, RectF dirtyRect)
-        {
         }
     }
     public void DrawCircle(float centerX, float centerY, float radius, Color color, bool append = false)
