@@ -9,7 +9,11 @@ namespace SquareCustomControl
 
         private void OnDrawClicked(object sender, EventArgs e)
         {
-            drawableControl.DrawCircle(100, 100, 50, Colors.Blue);
+            drawableControl.DrawCircle(
+                (float)(drawableControl.Width / 2),
+                (float)(drawableControl.Height / 2), 
+                100, 
+                Colors.Blue);
         }
     }
 }
