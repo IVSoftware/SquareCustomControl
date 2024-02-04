@@ -44,6 +44,17 @@ public partial class CustomControl : Grid
             int squareDimension = (int)(scaling * Math.Max(100, Math.Min(page.Height, page.Width)));
             HeightRequest = squareDimension;
             WidthRequest = squareDimension;
+
+            ClearDraw();
+            var decr = (int)(WidthRequest / 40f);
+            for (int radius = (int)WidthRequest / 2; radius > 0; radius -= decr)
+            {
+                DrawCircle(
+                    (float)(HeightRequest / 2),
+                    (float)(HeightRequest / 2),
+                    radius,
+                    Colors.Blue);
+            }
             _graphics.Invalidate();
         }
     }
@@ -56,8 +67,8 @@ public partial class CustomControl : Grid
             canvas.DrawCircle(centerX, centerY, radius);
         });
         _drawDocument.Add(drawAction);
-        _graphics.Invalidate(); // Trigger a redraw
     }
+    public void Refresh() =>_graphics.Invalidate();
     public void ClearDraw()
     {
         _drawDocument.Clear();

@@ -13,13 +13,6 @@
             <local:CustomControl
                 x:Name="drawableControl"
                 BackgroundColor="WhiteSmoke">
-                    <Button
-                    x:Name="buttonDraw"
-                    Text="Draw Circle"
-                    SemanticProperties.Hint="Counts the number of times you click"
-                    Clicked="OnDrawClicked"
-                    VerticalOptions="End"
-                    HorizontalOptions="Center" />
             </local:CustomControl>
         </VerticalStackLayout>
     </ScrollView>
