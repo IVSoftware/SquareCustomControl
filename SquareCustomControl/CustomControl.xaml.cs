@@ -65,7 +65,7 @@ public partial class CustomControl : Grid
 
     private void DrawCircle(float centerX, float centerY, float radius, Color color)
     {
-        var drawAction = new Action<ICanvas, RectF>((canvas, dirtyRect) =>
+        var drawAction = ((ICanvas canvas, RectF dirtyRect) =>
         {
             canvas.StrokeColor = color;
             canvas.DrawCircle(centerX, centerY, radius);
