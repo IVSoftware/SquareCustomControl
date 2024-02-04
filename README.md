@@ -1,56 +1,74 @@
 ## Square Custom Control
 
-I feel you are on the right track with controlling the squareness of the containing grid so that its correct dimensions go into the custom draw method. 
-
-___
-*I'm trying to decide whether this is "that much different" from what you can do with normal layout grids. This may be a tad bit simpler, you decide.*
-___
-
-You could experiment with binding to the `SizeChanged` event of your `ContentView`. I tested this on Android, iPhone, iPad, and WinUI and it seems to work.
+I feel you are on the right track with controlling the squareness of the containing grid so that its correct dimensions go into the custom draw method. In fact if your use case allows, have the base class of the custom control be a `grid` in the first place. The idea is to experiment pulling the dimension into the custom control by subscribing to the `SizeChanged` event of the ancestral `ContentPage`. I tested this on Android, iPhone, iPad, and WinUI and it seems to work.
 
 [![android screenshot][1]][1]
 
-
+#### Custon Control
 ```csharp
-public partial class MainPage : ContentPage
+public partial class CustomControl : Grid
 {
-    public MainPage()
-    {
-        InitializeComponent();
-        SizeChanged += (sender, e) =>
+	public CustomControl()
+	{
+		InitializeComponent();
+        PropertyChanged += (sender, e) =>
         {
-            BindingContext.SquareDimension =  
-                (int)Math.Max(100, (Math.Min(Height, Width)));
-        };
-    }
-    new MainPageBindingContext BindingContext => 
-        (MainPageBindingContext)base.BindingContext;
-}
-class MainPageBindingContext : INotifyPropertyChanged
-{
-    public int SquareDimension
-    {
-        get => _squareDimension;
-        set
-        {
-            if (!Equals(_squareDimension, value))
+            if (e.PropertyName == nameof(Window))
             {
-                _squareDimension = value;
-                OnPropertyChanged();
+                if (!_isLoaded)
+                {
+                    _isLoaded = true;
+                    // Check for null then subscribe to page size changes
+                    if (this.FindAncestorOfType<ContentPage>() is ContentPage page)
+                    {
+                        page.SizeChanged -= localHandler; // Good habit...
+                        page.SizeChanged += localHandler;
+                        void localHandler(object? sender, EventArgs e)
+                        {
+                            double scaling = 1.0;
+#if VERIFY_SCALING_WORKS
+                            scaling = 0.75;
+#endif
+                            int squareDimension =
+                                (int)(scaling * Math.Max(100, (Math.Min(page.Height, page.Width))));
+                            HeightRequest = squareDimension;
+                            WidthRequest = squareDimension;
+                        }
+                    }
+                }
             }
-        }
-    }
-    int _squareDimension = 100;
+        };
+	}
+    bool _isLoaded = false;
+    public virtual void Draw(ICanvas canvas, RectF dirtyRect) { }
+}
+```
+##### Uses Extension
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected virtual void OnPropertyChanged([CallerMemberName]string? propertyName = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+For example, you can retieve an ancestor `ContentPage`.
+
+```
+public static partial class Extensions
+{
+    public static T? FindAncestorOfType<T>(this Element element) where T : Element
+    {
+        while (element != null)
+        {
+            if (element is T correctType)
+            {
+                return correctType;
+            }
+            element = element.Parent;
+        }
+
+        return default;
+    }
 }
 ```
 
 ___
 
-What I tried is binding both the `HeightRequest` and the `WidthRequest` to the `SquareDimension` property.
+**MainPage**
 
 ```xaml
 <?xml version="1.0" encoding="utf-8" ?>
@@ -60,17 +78,12 @@ What I tried is binding both the `HeightRequest` and the `WidthRequest` to the `
     xmlns:local="clr-namespace:SquareCustomControl"
     x:Class="SquareCustomControl.MainPage"
     Shell.NavBarIsVisible="False">
-    <ContentPage.BindingContext>
-        <local:MainPageBindingContext/>
-    </ContentPage.BindingContext>
     <ScrollView>
         <VerticalStackLayout
             Padding="30,0"
             Spacing="25"
             VerticalOptions="Center">
-            <Grid
-                HeightRequest="{Binding SquareDimension}"
-                WidthRequest="{Binding SquareDimension}"
+            <local:CustomControl
                 BackgroundColor="Fuchsia">
                 <Image
                     Source="dotnet_bot.png"
@@ -78,11 +91,19 @@ What I tried is binding both the `HeightRequest` and the `WidthRequest` to the `
                     Margin="2"
                     SemanticProperties.Description="dot net bot in a race car number eight" 
                     BackgroundColor="White"/>
-            </Grid>
+            </local:CustomControl>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
 ```
+
+```csharp
+public partial class MainPage : ContentPage
+{
+    public MainPage() => InitializeComponent();
+}
+```
+
 
 
   [1]: https://i.stack.imgur.com/8NWxp.png

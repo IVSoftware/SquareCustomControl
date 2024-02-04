@@ -5,17 +5,13 @@
     xmlns:local="clr-namespace:SquareCustomControl"
     x:Class="SquareCustomControl.MainPage"
     Shell.NavBarIsVisible="False">
-    <ContentPage.BindingContext>
-        <local:MainPageBindingContext/>
-    </ContentPage.BindingContext>
     <ScrollView>
         <VerticalStackLayout
             Padding="30,0"
             Spacing="25"
             VerticalOptions="Center">
-            <Grid
-                HeightRequest="{Binding SquareDimension}"
-                WidthRequest="{Binding SquareDimension}"
+            <local:CustomControl
+                x:Name="drawableControl"
                 BackgroundColor="Fuchsia">
                 <Image
                     Source="dotnet_bot.png"
@@ -23,7 +19,15 @@
                     Margin="2"
                     SemanticProperties.Description="dot net bot in a race car number eight" 
                     BackgroundColor="White"/>
-            </Grid>
+
+                    <Button
+                    x:Name="buttonDraw"
+                    Text="Draw Circle"
+                    SemanticProperties.Hint="Counts the number of times you click"
+                    Clicked="OnDrawClicked"
+                    VerticalOptions="End"
+                    HorizontalOptions="Center" />
+            </local:CustomControl>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
