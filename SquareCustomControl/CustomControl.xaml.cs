@@ -48,21 +48,19 @@ public partial class CustomControl : Grid
         }
     }
 
-    public void DrawCircle(float centerX, float centerY, float radius, Color color, bool append = false)
+    public void DrawCircle(float centerX, float centerY, float radius, Color color)
     {
         var drawAction = new Action<ICanvas, RectF>((canvas, dirtyRect) =>
         {
             canvas.StrokeColor = color;
             canvas.DrawCircle(centerX, centerY, radius);
         });
-
-        if (!append)
-        {
-            _drawDocument.Clear();
-        }
-
         _drawDocument.Add(drawAction);
         _graphics.Invalidate(); // Trigger a redraw
+    }
+    public void ClearDraw()
+    {
+        _drawDocument.Clear();
     }
 
     private class InnerDrawable : IDrawable

@@ -12,8 +12,9 @@ namespace SquareCustomControl
             drawableControl.DrawCircle(
                 (float)(drawableControl.Width / 2),
                 (float)(drawableControl.Height / 2), 
-                100, 
+                _radius -= 5, 
                 Colors.Blue);
         }
+        int _radius = 100;
     }
 }
