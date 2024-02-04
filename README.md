@@ -1,109 +1,104 @@
-## Square Custom Control
+## Square Custom ControlOne approach you could experiment with is inheriting `Grid` to make a custom control that maintains an _internal_ `IDrawable`. There's little use in having the user of the control pass a canvas into the `CustomControl` in order to draw it. Now what you can do is make a new internal canvas whenever the control size changes.
 
-I feel you are on the right track with controlling the squareness of the containing grid so that its correct dimensions go into the custom draw method. In fact if your use case allows, have the base class of the custom control be a `grid` in the first place. The idea is to experiment pulling the dimension into the custom control by subscribing to the `SizeChanged` event of the ancestral `ContentPage`. I tested this on Android, iPhone, iPad, and WinUI and it seems to work.
+As far as squaring it up, I tested an approach of subscribing to `ContentPage.SizeChanged` events by traversing up the visual tree to the root view. 
 
-[![android screenshot][1]][1]
 
-#### Custon Control
+___
+
+Here's  a proto I tested across platforms:
+
 ```csharp
 public partial class CustomControl : Grid
 {
-	public CustomControl()
-	{
-		InitializeComponent();
+    private readonly GraphicsView _graphics;
+    private bool _isLoaded = false;
+    private List<Action<ICanvas, RectF>> _drawDocument = new List<Action<ICanvas, RectF>>();
+
+    public CustomControl()
+    {
+        _graphics = new GraphicsView
+        {
+            Drawable = new InnerDrawable(this),
+            BackgroundColor = Colors.Transparent,
+            VerticalOptions = LayoutOptions.Fill,
+            HorizontalOptions = LayoutOptions.Fill,
+        };
+        Children.Add(_graphics); // Add the GraphicsView to the control's visual tree
+
         PropertyChanged += (sender, e) =>
         {
-            if (e.PropertyName == nameof(Window))
+            if (e.PropertyName == nameof(Window) && !_isLoaded)
             {
-                if (!_isLoaded)
+                _isLoaded = true;
+                // Subscribe to page size changes
+                if (this.FindAncestorOfType<ContentPage>() is ContentPage page)
                 {
-                    _isLoaded = true;
-                    // Check for null then subscribe to page size changes
-                    if (this.FindAncestorOfType<ContentPage>() is ContentPage page)
-                    {
-                        page.SizeChanged -= localHandler; // Good habit...
-                        page.SizeChanged += localHandler;
-                        void localHandler(object? sender, EventArgs e)
-                        {
-                            double scaling = 1.0;
-#if VERIFY_SCALING_WORKS
-                            scaling = 0.75;
-#endif
-                            int squareDimension =
-                                (int)(scaling * Math.Max(100, (Math.Min(page.Height, page.Width))));
-                            HeightRequest = squareDimension;
-                            WidthRequest = squareDimension;
-                        }
-                    }
+                    page.SizeChanged += OnPageSizeChanged;
                 }
             }
         };
-	}
-    bool _isLoaded = false;
-    public virtual void Draw(ICanvas canvas, RectF dirtyRect) { }
-}
-```
-##### Uses Extension
+    }
 
-For example, you can retieve an ancestor `ContentPage`.
-
-```
-public static partial class Extensions
-{
-    public static T? FindAncestorOfType<T>(this Element element) where T : Element
+    private void OnPageSizeChanged(object? sender, EventArgs e)
     {
-        while (element != null)
+        if (sender is ContentPage page)
         {
-            if (element is T correctType)
+            double scaling = 1.0;
+            int squareDimension = (int)(scaling * Math.Max(100, Math.Min(page.Height, page.Width)));
+            HeightRequest = squareDimension;
+            WidthRequest = squareDimension;
+
+            ClearDraw();
+            var decr = (int)(WidthRequest / 40f);
+            for (int radius = (int)WidthRequest / 2; radius > 0; radius -= decr)
             {
-                return correctType;
+                DrawCircle(
+                    (float)(HeightRequest / 2),
+                    (float)(HeightRequest / 2),
+                    radius,
+                    Colors.Blue);
             }
-            element = element.Parent;
+            _graphics.Invalidate();
+        }
+    }
+```
+##### Expose Draw Events
+If you want to provide drawing, think of the custom control as a wrapper and do not expose the canvas itself.
+
+    public void DrawCircle(float centerX, float centerY, float radius, Color color)
+    {
+        var drawAction = new Action<ICanvas, RectF>((canvas, dirtyRect) =>
+        {
+            canvas.StrokeColor = color;
+            canvas.DrawCircle(centerX, centerY, radius);
+        });
+        _drawDocument.Add(drawAction);
+    }
+    public void Refresh() =>_graphics.Invalidate();
+    public void ClearDraw()
+    {
+        _drawDocument.Clear();
+    }
+
+    private class InnerDrawable : IDrawable
+    {
+        private readonly CustomControl _parent;
+
+        public InnerDrawable(CustomControl parent)
+        {
+            _parent = parent;
         }
 
-        return default;
+        public void Draw(ICanvas canvas, RectF dirtyRect)
+        {
+            foreach (var action in _parent._drawDocument)
+            {
+                action.Invoke(canvas, dirtyRect);
+            }
+        }
     }
 }
 ```
 
-___
-
-**MainPage**
-
-```xaml
-<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage 
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:SquareCustomControl"
-    x:Class="SquareCustomControl.MainPage"
-    Shell.NavBarIsVisible="False">
-    <ScrollView>
-        <VerticalStackLayout
-            Padding="30,0"
-            Spacing="25"
-            VerticalOptions="Center">
-            <local:CustomControl
-                BackgroundColor="Fuchsia">
-                <Image
-                    Source="dotnet_bot.png"
-                    Aspect="AspectFit"
-                    Margin="2"
-                    SemanticProperties.Description="dot net bot in a race car number eight" 
-                    BackgroundColor="White"/>
-            </local:CustomControl>
-        </VerticalStackLayout>
-    </ScrollView>
-</ContentPage>
-```
-
-```csharp
-public partial class MainPage : ContentPage
-{
-    public MainPage() => InitializeComponent();
-}
-```
 
 
-
-  [1]: https://i.stack.imgur.com/8NWxp.png

@@ -1,15 +1,19 @@
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Graphics;
-using System;
-using System.Collections.Generic;
-
 namespace SquareCustomControl;
 
 public partial class CustomControl : Grid
 {
     private readonly GraphicsView _graphics;
     private bool _isLoaded = false;
-    private List<Action<ICanvas, RectF>> _drawDocument = new List<Action<ICanvas, RectF>>();
+
+    /// <summary>
+    /// Actions that are 'always' drawn on invalidate that define the look of the control.
+    /// </summary>
+    private List<Action<ICanvas, RectF>> InternalDrawDocument { get; } = new List<Action<ICanvas, RectF>>();
+
+    /// <summary>
+    /// Actions that can be injected by the user.
+    /// </summary>
+    public List<Action<ICanvas, RectF>> UserDrawDocument { get; } = new List<Action<ICanvas, RectF>>();
 
     public CustomControl()
     {
@@ -45,34 +49,36 @@ public partial class CustomControl : Grid
             HeightRequest = squareDimension;
             WidthRequest = squareDimension;
 
-            ClearDraw();
+            InternalDrawDocument.Clear();
+            UserDrawDocument.Clear();
+            _graphics.Invalidate();
+
             var decr = (int)(WidthRequest / 40f);
             for (int radius = (int)WidthRequest / 2; radius > 0; radius -= decr)
             {
-                DrawCircle(
+                InternalDrawDocument.Add((canvas, dirtyRect) =>
+                {
+                    canvas.StrokeColor = Colors.Blue;
+                    canvas.DrawCircle(
                     (float)(HeightRequest / 2),
                     (float)(HeightRequest / 2),
-                    radius,
-                    Colors.Blue);
+                    radius);
+                });
             }
             _graphics.Invalidate();
         }
     }
 
-    public void DrawCircle(float centerX, float centerY, float radius, Color color)
+    private void DrawCircle(float centerX, float centerY, float radius, Color color)
     {
         var drawAction = new Action<ICanvas, RectF>((canvas, dirtyRect) =>
         {
             canvas.StrokeColor = color;
             canvas.DrawCircle(centerX, centerY, radius);
         });
-        _drawDocument.Add(drawAction);
+        InternalDrawDocument.Add(drawAction);
     }
     public void Refresh() =>_graphics.Invalidate();
-    public void ClearDraw()
-    {
-        _drawDocument.Clear();
-    }
 
     private class InnerDrawable : IDrawable
     {
@@ -85,12 +91,33 @@ public partial class CustomControl : Grid
 
         public void Draw(ICanvas canvas, RectF dirtyRect)
         {
-            foreach (var action in _parent._drawDocument)
+            foreach (var action in _parent.InternalDrawDocument)
             {
                 action.Invoke(canvas, dirtyRect);
             }
+            foreach (var action in _parent.UserDrawDocument)
+            {
+                action.Invoke(canvas, dirtyRect);
+            }
+            _parent.Draw?.Invoke(this, new DrawEventArgs(canvas,  dirtyRect));
         }
     }
+    public event EventHandler<DrawEventArgs>? Draw;
+    protected virtual void OnDraw(DrawEventArgs e)
+    {
+        Draw?.Invoke(this, e);
+    }
+}
+public class DrawEventArgs : EventArgs
+{
+    public DrawEventArgs(ICanvas canvas, RectF dirtyRect)
+    {
+        Canvas = canvas;
+        DirtyRect = dirtyRect;
+    }
+
+    public ICanvas Canvas { get; }
+    public RectF DirtyRect { get; }
 }
 
 public static partial class Extensions

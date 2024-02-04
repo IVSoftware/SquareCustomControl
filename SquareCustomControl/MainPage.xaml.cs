@@ -1,25 +1,29 @@
-﻿using System.ComponentModel;
+﻿using Microsoft.UI.Xaml.Controls;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace SquareCustomControl
 {
     public partial class MainPage : ContentPage
     {
-        public MainPage() => InitializeComponent();
-
+        public MainPage()
+        {
+            InitializeComponent();
+        }
         private void OnDrawClicked(object sender, EventArgs e)
         {
-            Dispatcher.Dispatch(() =>
+            drawableControl.UserDrawDocument.Add((canvas, r) =>
             {
-                for (int radius = (int)drawableControl.Width/2; radius > 0; radius -= 15)
-                {
-                    drawableControl.DrawCircle(
-                        (float)(drawableControl.Width / 2),
-                        (float)(drawableControl.Height / 2),
-                        radius,
-                        Colors.Blue);
-                }
+                canvas.StrokeColor = Colors.Red;
+                canvas.DrawLine(100f, (float)(drawableControl.Height / 2), 200f, (float)(drawableControl.Height / 2));
             });
+            drawableControl.Refresh();
+        }
+
+        private void OnDrawClear(object sender, EventArgs e)
+        {
+            drawableControl.UserDrawDocument.Clear();
+            drawableControl.Refresh();
         }
     }
 }

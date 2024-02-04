@@ -13,6 +13,22 @@
             <local:CustomControl
                 x:Name="drawableControl"
                 BackgroundColor="WhiteSmoke">
+                <HorizontalStackLayout
+                    HorizontalOptions="Center"
+                    VerticalOptions="End">
+                    <Button 
+                        HeightRequest="50"
+                        WidthRequest="150"
+                        BackgroundColor="RoyalBlue" 
+                        Text="Draw"
+                        Clicked="OnDrawClicked"/>    
+                    <Button 
+                        HeightRequest="50"
+                        WidthRequest="150"
+                        BackgroundColor="LightSalmon" 
+                        Text="Clear"
+                        Clicked="OnDrawClear"/>                    
+                </HorizontalStackLayout>
             </local:CustomControl>
         </VerticalStackLayout>
     </ScrollView>
